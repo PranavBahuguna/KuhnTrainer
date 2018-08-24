@@ -41,10 +41,6 @@ int main() {
             << "3 - Calculation times" << std::endl;
   std::cin >> xAxisUnits;
 
-  std::string filename;
-  std::cout << "Enter filename:" << std::endl;
-  std::cin >> filename;
-
   if (numTrials < 1 || numIterations < 1)
     return 0;
 
@@ -103,6 +99,8 @@ int main() {
     }
   }
 
+  title = "Average game value over time";                        // title
+  yLabel = "Avg. game value";                                    // y-axis label
   const auto &avgGameValues = game.getAvgGameValues();           // y-values
   const auto &avgGameValueErrors = game.getAvgGameValueErrors(); // e-values
   const auto &playerNames =
@@ -115,8 +113,8 @@ int main() {
                playerNames[i]);
   gPlot.showPlot(title, xLabel, yLabel, "", "");
 
-  title = "Average game value distance over time";       // title
-  yLabel = "Avg. game value distance";                   // y-axis label
+  title = "Average e-Nash value over time";              // title
+  yLabel = "Avg. e-Nash value";                          // y-axis label
   const auto &gameValueDists = game.getGameValueDists(); // y-values
   std::vector<double> errorsVec(numSamples);             // e-values
   std::fill(std::begin(errorsVec), std::end(errorsVec), 0.0);
@@ -124,15 +122,6 @@ int main() {
   // Plot graph of average game value distance from expected for each player
   gPlot.plot(xValues, gameValueDists, errorsVec, "distances");
   gPlot.showPlot(title, xLabel, yLabel, "", "log");
-
-  std::ofstream file;
-  file.open(filename, std::ios::app);
-  for (auto &x : xValues)
-    file << x << ",";
-  file << std::endl;
-  for (auto &y : gameValueDists)
-    file << y << ",";
-  file << std::endl;
 
   Py_Finalize();
   return 0;
