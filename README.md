@@ -21,3 +21,6 @@ Once the learning process is complete, the program outputs the following results
 
 # Testing
 The game includes tests for both game versions. The tests run each game for ten million iterations and compares the calculated bet probabilities for each game tree node against the expected value. The bet values for 2 and 3-player are checked within a tolerance of 0.01 and 0.03 respectively.
+
+# Report
+A more detailed report of my investigations and methodology used in this project can be viewed [here](https://github.com/PranavBahuguna/KuhnTrainer/blob/master/report.pdf).
