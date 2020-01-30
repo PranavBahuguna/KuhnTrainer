@@ -2,7 +2,9 @@
 #define GRAPHPLOTTER_H
 
 #include <Python.h>
+
 #include <vector>
+#include <string>
 
 class GraphPlotter {
 

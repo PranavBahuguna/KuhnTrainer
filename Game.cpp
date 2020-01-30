@@ -15,13 +15,19 @@
 #define USE_TREE_PRUNING true
 #define PRUNING_THRESHOLD 1e-3
 #define NUM_THREADS 4
+#define N_ACTIONS 2
+
+template <typename T>
+constexpr auto to_underlying(T e) noexcept {
+  return static_cast<std::underlying_type_t<T>>(e);
+}
 
 /* Constructor
  * @param numPlayers :: Number of players in the game (2 or 3)
  */
-Game::Game(const int numPlayers)
-    : NUM_PLAYERS(numPlayers), NUM_CARDS(numPlayers == 2 ? 3 : 4),
-      NUM_LEVELS(numPlayers == 2 ? 4 : 6), m_gameCards(numPlayers) {
+Game::Game(const size_t nPlayers)
+    : NUM_PLAYERS(nPlayers), NUM_CARDS(nPlayers == 2 ? 3 : 4),
+      NUM_LEVELS(nPlayers == 2 ? 4 : 6), m_gameCards(nPlayers) {
   m_rng.seed(std::random_device()());
 
   // Setup the decision nodes vector
@@ -59,7 +65,7 @@ Game::Game(const int numPlayers)
 
   for (size_t level = 0; level < NUM_LEVELS - 1; ++level) {
     size_t numDNodes = m_dNodes[0][level].size();
-    m_isDNode[level + 1] = std::vector<bool>(numDNodes * NUM_ACTIONS);
+    m_isDNode[level + 1] = std::vector<bool>(numDNodes * N_ACTIONS);
     for (size_t index : m_dNodeIndexes[level + 1])
       m_isDNode[level + 1][index] = true;
   }
@@ -88,27 +94,28 @@ Game::Game(const int numPlayers)
     size_t numDNodes = m_dNodes[0][i].size();
     // There is a utility set for each action for each dNode in the next level
     m_utilities[i + 1] = std::vector<std::vector<double>>(
-        numDNodes * NUM_ACTIONS, std::vector<double>(NUM_PLAYERS));
+        numDNodes * N_ACTIONS, std::vector<double>(NUM_PLAYERS));
     m_weights[i + 1] = std::vector<std::vector<double>>(
-        numDNodes * NUM_ACTIONS, std::vector<double>(NUM_PLAYERS));
-    m_blacklist[i] = std::vector<bool>(numDNodes * NUM_ACTIONS);
+        numDNodes * N_ACTIONS, std::vector<double>(NUM_PLAYERS));
+    m_blacklist[i] = std::vector<bool>(numDNodes * N_ACTIONS);
     for (size_t j = 0; j < m_terminalUtilities.size(); ++j)
       m_terminalUtilities[j][i + 1] = std::vector<std::vector<double>>(
-          numDNodes * NUM_ACTIONS, std::vector<double>(NUM_PLAYERS));
+          numDNodes * N_ACTIONS, std::vector<double>(NUM_PLAYERS));
   }
 
   // Calculate utilities for all terminal nodes for each possible set of cards
   for (auto &cards : findCardPermutations(NUM_PLAYERS)) {
     size_t comboIndex = calcCardSetIndex(cards);
-    for (int level = 0; level < NUM_LEVELS - 1; ++level) {
-      int nextLevel = level + 1;
-      Card card = cards[level % NUM_PLAYERS];
+    
+    for (size_t level = 0; level < NUM_LEVELS - 1; ++level) {
+      size_t nextLevel = level + 1;
+      size_t card = to_underlying(cards[level % NUM_PLAYERS]);
 
       for (size_t i = 0; i < m_dNodeIndexes[level].size(); ++i) {
         auto &node = m_dNodes[card][level][i];
 
-        for (size_t action = 0; action < NUM_ACTIONS; ++action) {
-          size_t nlIndex = i * NUM_ACTIONS + action;
+        for (size_t action = 0; action < N_ACTIONS; ++action) {
+          size_t nlIndex = i * N_ACTIONS + action;
 
           if (!m_isDNode[nextLevel][nlIndex]) {
             // Node reached by action is terminal - calculate terminal utilities
@@ -169,7 +176,7 @@ void Game::train(size_t iterations) {
     const auto &gameValues = m_utilities[0][0];
     for (size_t j = 0; j < NUM_PLAYERS; ++j) {
       culGameValues[j] += gameValues[j];
-      m_gameValuesPtr->at(j).push_back(culGameValues[j] / (i + 1));
+      m_gameValuesPtr->at(j).push_back(culGameValues[j] / (i + 1.0));
     }
 
     // Calculate average strategy for each node for this iteration
@@ -310,10 +317,10 @@ void Game::cfrm() {
   // decision node on each level
 
   m_currentNodesReached++; // Top-level node always visited
-  for (int level = 0; level < NUM_LEVELS - 1; ++level) {
+  for (size_t level = 0; level < NUM_LEVELS - 1; ++level) {
     const size_t nextLevel = level + 1;
     const size_t pIndex = level % NUM_PLAYERS;
-    const size_t card = m_gameCards[pIndex];
+    const size_t card = to_underlying(m_gameCards[pIndex]);
 
     // #pragma omp parallel for num_threads(NUM_THREADS)
     for (int i = 0; i < static_cast<int>(m_dNodeIndexes[level].size()); ++i) {
@@ -322,13 +329,13 @@ void Game::cfrm() {
       node.calcStrategy(weights->at(level)[dNodeIndex][pIndex]);
       const auto &strategy = node.getStrategy();
 
-      for (size_t action = 0; action < NUM_ACTIONS; ++action) {
-        size_t nlIndex = i * NUM_ACTIONS + action;
+      for (size_t action = 0; action < N_ACTIONS; ++action) {
+        size_t nlIndex = i * N_ACTIONS + action;
+        double betProb = node.getLastAvgBetProb();
+        double actionProb = action == to_underlying(Action::P) ? 1 - betProb : betProb;
 
         // Check if the action from this node is blacklisted - if not, check if
         // it needs blacklisting
-        double betProb = node.getLastAvgBetProb();
-        double actionProb = action == Action::P ? 1 - betProb : betProb;
         if (USE_TREE_PRUNING &&
             (actionProb < PRUNING_THRESHOLD ||
              (level > 0 && m_blacklist[level - 1][dNodeIndex]))) {
@@ -357,7 +364,7 @@ void Game::cfrm() {
   for (int level = NUM_LEVELS - 2; level >= 0; --level) {
     const size_t nextLevel = level + 1;
     const size_t pIndex = level % NUM_PLAYERS;
-    const size_t card = m_gameCards[pIndex];
+    const size_t card = to_underlying(m_gameCards[pIndex]);
 
     // #pragma omp parallel for num_threads(NUM_THREADS)
     for (int i = 0; i < static_cast<int>(m_dNodeIndexes[level].size()); ++i) {
@@ -370,8 +377,8 @@ void Game::cfrm() {
       const auto &strategy = dNode.getStrategy();
       std::vector<double> nodeUtilities(NUM_PLAYERS);
 
-      for (size_t action = 0; action < NUM_ACTIONS; ++action) {
-        const size_t nlIndex = i * NUM_ACTIONS + action;
+      for (size_t action = 0; action < N_ACTIONS; ++action) {
+        const size_t nlIndex = i * N_ACTIONS + action;
         // Skip action if blacklisted
         if (m_blacklist[level][nlIndex])
           continue;
@@ -394,8 +401,8 @@ void Game::cfrm() {
             weights->at(level)[dNodeIndex][(pIndex + p) % NUM_PLAYERS];
 
       // Update regrets for each action
-      for (size_t action = 0; action < NUM_ACTIONS; ++action) {
-        const size_t nlIndex = i * NUM_ACTIONS + action;
+      for (size_t action = 0; action < N_ACTIONS; ++action) {
+        const size_t nlIndex = i * N_ACTIONS + action;
         bool isDNode = m_isDNode[nextLevel][nlIndex];
         double regret =
             (isDNode ? utilities->at(nextLevel)[nlIndex][pIndex]
@@ -576,14 +583,14 @@ void Game::findCardCombinations(std::vector<std::vector<Card>> &combinations,
  * @return :: The calculated index
  */
 size_t Game::calcCardSetIndex(const std::vector<Card> &cards) const {
-  Card a = cards[0];
-  Card b = cards[1];
+  size_t a = to_underlying(cards[0]);
+  size_t b = to_underlying(cards[1]);
   if (NUM_PLAYERS == 2) {
     size_t A = 2 * a;
     size_t B = b + ((b < a) ? 1 : 0) - 1;
     return A + B;
   } else {
-    Card c = cards[2];
+    size_t c = to_underlying(cards[2]);
     size_t A = 6 * a;
     size_t B = 2 * (b + ((b < a) ? 1 : 0) - 1);
     size_t C = (c < std::min(a, b) ? c : (c < std::max(a, b) ? c - 1 : c - 2));

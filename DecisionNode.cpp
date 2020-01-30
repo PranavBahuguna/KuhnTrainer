@@ -13,7 +13,7 @@
  */
 DecisionNode::DecisionNode(const std::string &name)
     : NAME(name), m_strategy(NUM_ACTIONS), m_strategySum(NUM_ACTIONS),
-      m_regretSum(NUM_ACTIONS) {}
+      m_regretSum(NUM_ACTIONS), m_avgBetProbPtr(NULL) {}
 
 /* Initialise the decision node's state and reset all strategies and regrets
  */

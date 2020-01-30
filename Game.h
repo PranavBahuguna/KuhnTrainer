@@ -10,13 +10,13 @@
 #include <set>
 #include <vector>
 
-enum Card { J = 0, Q = 1, K = 2, A = 3 };
-enum Action { P = 0, B = 1 };
+enum class Card { J = 0, Q = 1, K = 2, A = 3 };
+enum class Action { P = 0, B = 1 };
 
 class Game {
 
 public:
-  Game(const int numPlayers);
+  Game(const size_t nPlayers);
 
   void train(size_t iterations);
   void cfrm();
@@ -53,10 +53,9 @@ private:
                              const std::string &history) const;
   size_t calcCardSetIndex(const std::vector<Card> &cards) const;
 
-  const int NUM_ACTIONS = 2;
-  const int NUM_PLAYERS;
-  const int NUM_CARDS;
-  const int NUM_LEVELS;
+  const size_t NUM_PLAYERS;
+  const size_t NUM_CARDS;
+  const size_t NUM_LEVELS;
   std::mt19937 m_rng;
   std::vector<Card> m_gameCards;
   std::vector<std::vector<std::vector<double>>> m_gameValues;
