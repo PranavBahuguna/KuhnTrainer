@@ -2,6 +2,7 @@
 #include "GraphPlotter.h"
 
 #include <boost/lexical_cast.hpp>
+#include <Windows.h>
 
 #include <cmath>
 #include <fstream>
@@ -10,9 +11,9 @@
 #include <sstream>
 #include <string>
 
-#define XAXIS_ITERATIONS    1
-#define XAXIS_NODES_REACHED 2
-#define XAXIS_CALC_TIMES    3
+constexpr int XAXIS_ITERATIONS    = 1;
+constexpr int XAXIS_NODES_REACHED = 2;
+constexpr int XAXIS_CALC_TIMES    = 3;
 
 int main(int argc, char *argv[]) {
   // Init python interpreter and add modules to sys path
@@ -21,20 +22,12 @@ int main(int argc, char *argv[]) {
   PyRun_SimpleString("sys.path.append(\"./PythonModules/\")");
 
   // Obtain game parameters from input
-  /*
-  size_t nPlayers    = boost::lexical_cast<size_t>(argv[0]);
-  size_t nTrials     = boost::lexical_cast<size_t>(argv[1]);
-  size_t nIterations = boost::lexical_cast<size_t>(argv[2]);
-  size_t nSamples    = boost::lexical_cast<size_t>(argv[3]);
-  size_t xAxisUnits  = boost::lexical_cast<size_t>(argv[4]);
-  */
-
-  size_t nPlayers = 2;
-  size_t nTrials = 1;
-  size_t nIterations = 1000;
-  size_t nSamples = 1000;
-  size_t xAxisUnits = 1;
-
+  int nPlayers    = boost::lexical_cast<int>(argv[1]);
+  int nTrials     = boost::lexical_cast<int>(argv[2]);
+  int nIterations = boost::lexical_cast<int>(argv[3]);
+  int nSamples    = boost::lexical_cast<int>(argv[4]);
+  int xAxisUnits  = boost::lexical_cast<int>(argv[5]);
+  
   // Initialise game and train for a number of iterations
   Game game(nPlayers);
   for (size_t i = 0; i < nTrials; ++i) {
