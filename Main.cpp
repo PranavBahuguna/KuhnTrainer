@@ -21,11 +21,19 @@ int main(int argc, char *argv[]) {
   PyRun_SimpleString("sys.path.append(\"./PythonModules/\")");
 
   // Obtain game parameters from input
+  /*
   size_t nPlayers    = boost::lexical_cast<size_t>(argv[0]);
   size_t nTrials     = boost::lexical_cast<size_t>(argv[1]);
   size_t nIterations = boost::lexical_cast<size_t>(argv[2]);
   size_t nSamples    = boost::lexical_cast<size_t>(argv[3]);
   size_t xAxisUnits  = boost::lexical_cast<size_t>(argv[4]);
+  */
+
+  size_t nPlayers = 2;
+  size_t nTrials = 1;
+  size_t nIterations = 1000;
+  size_t nSamples = 1000;
+  size_t xAxisUnits = 1;
 
   // Initialise game and train for a number of iterations
   Game game(nPlayers);

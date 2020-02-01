@@ -4,8 +4,6 @@
 #include <unordered_set>
 #include <vector>
 
-enum class Position { LEFT, RIGHT };
-
 class DecisionNode {
 public:
   DecisionNode(const std::string &name);

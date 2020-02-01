@@ -26,8 +26,10 @@ constexpr auto to_underlying(T e) noexcept {
  * @param numPlayers :: Number of players in the game (2 or 3)
  */
 Game::Game(const size_t nPlayers)
-    : NUM_PLAYERS(nPlayers), NUM_CARDS(nPlayers == 2 ? 3 : 4),
-      NUM_LEVELS(nPlayers == 2 ? 4 : 6), m_gameCards(nPlayers) {
+    : NUM_PLAYERS(nPlayers),
+      NUM_CARDS(nPlayers == 2 ? 3 : 4),
+      NUM_LEVELS(nPlayers == 2 ? 4 : 6),
+      m_gameCards(nPlayers) {
   m_rng.seed(std::random_device()());
 
   // Setup the decision nodes vector
