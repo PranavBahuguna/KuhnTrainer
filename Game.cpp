@@ -12,10 +12,10 @@
 #include <string>
 #include <unordered_set>
 
-#define USE_TREE_PRUNING true
-#define PRUNING_THRESHOLD 1e-3
-#define NUM_THREADS 4
-#define N_ACTIONS 2
+constexpr bool   USE_TREE_PRUNING  = true;
+constexpr double PRUNING_THRESHOLD = 1e-3;
+constexpr int    NUM_THREADS       = 4;
+constexpr int    NUM_ACTIONS       = 2;
 
 template <typename T>
 constexpr auto to_underlying(T e) noexcept {
@@ -25,18 +25,20 @@ constexpr auto to_underlying(T e) noexcept {
 /* Constructor
  * @param numPlayers :: Number of players in the game (2 or 3)
  */
-Game::Game(const size_t nPlayers)
+Game::Game(const int nPlayers)
     : NUM_PLAYERS(nPlayers),
       NUM_CARDS(nPlayers == 2 ? 3 : 4),
       NUM_LEVELS(nPlayers == 2 ? 4 : 6),
-      m_gameCards(nPlayers) {
+      m_gameCards(nPlayers),
+      m_dNodes(NUM_CARDS, Vec2D<DecisionNode>(NUM_LEVELS - 1)),
+      m_isDNode(NUM_LEVELS),
+      m_utilities(NUM_LEVELS),
+      m_weights(NUM_LEVELS),
+      m_blacklist(NUM_LEVELS - 1) {
+
   m_rng.seed(std::random_device()());
 
   // Setup the decision nodes vector
-  m_dNodes = std::vector<std::vector<std::vector<DecisionNode>>>(
-      NUM_CARDS, std::vector<std::vector<DecisionNode>>(
-                     NUM_LEVELS - 1, std::vector<DecisionNode>()));
-
   std::vector<char> cards = {'J', 'Q', 'K', 'A'};
   for (size_t i = 0; i < NUM_CARDS; ++i) {
     std::string c = std::string(1, cards[i]);
@@ -62,47 +64,33 @@ Game::Game(const size_t nPlayers)
     m_dNodeIndexes = {{0}, {0, 1}, {0, 1, 2, 3}, {1, 2, 3}, {0, 1}, {}};
 
   // Setup the decision node check vector
-  m_isDNode = std::vector<std::vector<bool>>(NUM_LEVELS, std::vector<bool>());
   m_isDNode[0] = {{true}};
-
   for (size_t level = 0; level < NUM_LEVELS - 1; ++level) {
     size_t numDNodes = m_dNodes[0][level].size();
-    m_isDNode[level + 1] = std::vector<bool>(numDNodes * N_ACTIONS);
+
+    m_isDNode[level + 1] = std::vector<bool>(numDNodes * NUM_ACTIONS);
     for (size_t index : m_dNodeIndexes[level + 1])
       m_isDNode[level + 1][index] = true;
   }
 
   // Setup the utilities, terminal utilities, blacklist and weight vectors
-  m_utilities = std::vector<std::vector<std::vector<double>>>(
-      NUM_LEVELS, std::vector<std::vector<double>>());
-  m_terminalUtilities =
-      std::vector<std::vector<std::vector<std::vector<double>>>>(
-          static_cast<size_t>(boost::math::factorial<double>(NUM_PLAYERS)) *
-              NUM_CARDS,
-          std::vector<std::vector<std::vector<double>>>(
-              NUM_LEVELS, std::vector<std::vector<double>>()));
-  m_blacklist =
-      std::vector<std::vector<bool>>(NUM_LEVELS - 1, std::vector<bool>());
-  m_weights = std::vector<std::vector<std::vector<double>>>(
-      NUM_LEVELS, std::vector<std::vector<double>>());
+  int numOutcomes = static_cast<int>(boost::math::factorial<double>(NUM_PLAYERS) * NUM_CARDS);
+  m_terminalUtilities = Vec4D<double>(numOutcomes, Vec3D<double>(NUM_LEVELS));
 
-  m_utilities[0] =
-      std::vector<std::vector<double>>(1, std::vector<double>(NUM_PLAYERS));
+  m_utilities[0] = Vec2D<double>(1, Vec1D<double>(NUM_PLAYERS));
   // Top-level node has weights of 1 for each player
-  m_weights[0] = std::vector<std::vector<double>>(
-      1, std::vector<double>(NUM_PLAYERS, 1.0));
+  m_weights[0] = Vec2D<double>(1, Vec1D<double>(NUM_PLAYERS, 1.0));
 
-  for (size_t i = 0; i < NUM_LEVELS - 1; ++i) {
+  for (int i = 0; i < NUM_LEVELS - 1; ++i) {
     size_t numDNodes = m_dNodes[0][i].size();
+
     // There is a utility set for each action for each dNode in the next level
-    m_utilities[i + 1] = std::vector<std::vector<double>>(
-        numDNodes * N_ACTIONS, std::vector<double>(NUM_PLAYERS));
-    m_weights[i + 1] = std::vector<std::vector<double>>(
-        numDNodes * N_ACTIONS, std::vector<double>(NUM_PLAYERS));
-    m_blacklist[i] = std::vector<bool>(numDNodes * N_ACTIONS);
+    m_utilities[i + 1] = Vec2D<double>(numDNodes * NUM_ACTIONS, Vec1D<double>(NUM_PLAYERS));
+    m_weights[i + 1]   = Vec2D<double>(numDNodes * NUM_ACTIONS, Vec1D<double>(NUM_PLAYERS));
+    m_blacklist[i]     = std::vector<bool>(numDNodes * NUM_ACTIONS);
+
     for (size_t j = 0; j < m_terminalUtilities.size(); ++j)
-      m_terminalUtilities[j][i + 1] = std::vector<std::vector<double>>(
-          numDNodes * N_ACTIONS, std::vector<double>(NUM_PLAYERS));
+      m_terminalUtilities[j][i + 1] = Vec2D<double>(numDNodes * NUM_ACTIONS, Vec1D<double>(NUM_PLAYERS));
   }
 
   // Calculate utilities for all terminal nodes for each possible set of cards
@@ -116,8 +104,8 @@ Game::Game(const size_t nPlayers)
       for (size_t i = 0; i < m_dNodeIndexes[level].size(); ++i) {
         auto &node = m_dNodes[card][level][i];
 
-        for (size_t action = 0; action < N_ACTIONS; ++action) {
-          size_t nlIndex = i * N_ACTIONS + action;
+        for (size_t action = 0; action < NUM_ACTIONS; ++action) {
+          size_t nlIndex = i * NUM_ACTIONS + action;
 
           if (!m_isDNode[nextLevel][nlIndex]) {
             // Node reached by action is terminal - calculate terminal utilities
@@ -144,7 +132,7 @@ void Game::init() {
   }
 
   // Add another game values entry for each player
-  m_gameValues.push_back(std::vector<std::vector<double>>(NUM_PLAYERS));
+  m_gameValues.push_back(Vec2D<double>(NUM_PLAYERS));
   m_gameValuesPtr = &m_gameValues.back();
 
   // Reset number of nodes touched
@@ -159,9 +147,9 @@ void Game::init() {
  */
 void Game::train(size_t iterations) {
 
-  auto nodesReached = std::vector<double>(iterations);
-  auto calcTimes = std::vector<double>(iterations);
-  std::vector<double> culGameValues(NUM_PLAYERS);
+  Vec1D<double> nodesReached(iterations);
+  Vec1D<double> calcTimes(iterations);
+  Vec1D<double> culGameValues(NUM_PLAYERS);
 
   for (size_t i = 0; i < iterations; ++i) {
 
@@ -331,8 +319,8 @@ void Game::cfrm() {
       node.calcStrategy(weights->at(level)[dNodeIndex][pIndex]);
       const auto &strategy = node.getStrategy();
 
-      for (size_t action = 0; action < N_ACTIONS; ++action) {
-        size_t nlIndex = i * N_ACTIONS + action;
+      for (size_t action = 0; action < NUM_ACTIONS; ++action) {
+        size_t nlIndex = i * NUM_ACTIONS + action;
         double betProb = node.getLastAvgBetProb();
         double actionProb = action == to_underlying(Action::P) ? 1 - betProb : betProb;
 
@@ -379,8 +367,8 @@ void Game::cfrm() {
       const auto &strategy = dNode.getStrategy();
       std::vector<double> nodeUtilities(NUM_PLAYERS);
 
-      for (size_t action = 0; action < N_ACTIONS; ++action) {
-        const size_t nlIndex = i * N_ACTIONS + action;
+      for (size_t action = 0; action < NUM_ACTIONS; ++action) {
+        const size_t nlIndex = i * NUM_ACTIONS + action;
         // Skip action if blacklisted
         if (m_blacklist[level][nlIndex])
           continue;
@@ -403,8 +391,8 @@ void Game::cfrm() {
             weights->at(level)[dNodeIndex][(pIndex + p) % NUM_PLAYERS];
 
       // Update regrets for each action
-      for (size_t action = 0; action < N_ACTIONS; ++action) {
-        const size_t nlIndex = i * N_ACTIONS + action;
+      for (size_t action = 0; action < NUM_ACTIONS; ++action) {
+        const size_t nlIndex = i * NUM_ACTIONS + action;
         bool isDNode = m_isDNode[nextLevel][nlIndex];
         double regret =
             (isDNode ? utilities->at(nextLevel)[nlIndex][pIndex]
