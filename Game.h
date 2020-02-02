@@ -1,6 +1,7 @@
 #ifndef GAME_H
 #define GAME_H
 
+#include "DataTypes.h"
 #include "DecisionNode.h"
 
 #include <chrono>
@@ -13,17 +14,7 @@
 enum class Card { J = 0, Q = 1, K = 2, A = 3 };
 enum class Action { P = 0, B = 1 };
 
-template<typename T>
-using Vec1D = std::vector<T>;
-
-template<typename T>
-using Vec2D = Vec1D<Vec1D<T>>;
-
-template<typename T>
-using Vec3D = Vec1D<Vec2D<T>>;
-
-template<typename T>
-using Vec4D = Vec1D<Vec3D<T>>;
+typedef DecisionNode DNode;
 
 class Game {
 
@@ -44,37 +35,30 @@ public:
   auto &getExpectedGameValues() const { return m_expectedGameValues; }
   auto &getGameValueDists() const { return m_gameValueDists; }
   auto &getNodesReachedList() const { return m_nodesReachedList; }
-  std::vector<std::string> getDNodeNames() const;
+  Vec1D<std::string> getDNodeNames() const;
 
   friend std::ostream &operator<<(std::ostream &os, const Game &game);
 
 private:
   Vec2D<Card> findCardPermutations(size_t k) const;
-  void findCardCombinations(std::vector<std::vector<Card>> &permutations,
-                            std::vector<Card> &currentPermutation, size_t k,
-                            size_t index, size_t start, size_t end) const;
-  size_t showdown(const std::vector<Card> &cards,
-                  const std::vector<size_t> &playerIndexes) const;
-
-  Action selectRandomAction(const std::vector<double> &strategy);
+  void findCardCombinations(Vec2D<Card> &permutations, Vec1D<Card> &currentPermutation, size_t k, size_t index, size_t start, size_t end) const;
+  size_t showdown(const Vec1D<Card> &cards, const Vec1D<size_t> &playerIndexes) const;
+  Action selectRandomAction(const Vec1D<double> &strategy);
   void selectRandomCards();
-  void calcPlayerInvestments(std::vector<double> &investments,
-                             const std::string &history) const;
-  void calcTerminalUtilities(std::vector<double> &utilities,
-                             const std::vector<Card> &cards,
-                             const std::string &history) const;
-  size_t calcCardSetIndex(const std::vector<Card> &cards) const;
+  void calcPlayerInvestments(Vec1D<double> &investments,const std::string &history) const;
+  void calcTerminalUtilities(Vec1D<double> &utilities, const Vec1D<Card> &cards,const std::string &history) const;
+  size_t calcCardSetIndex(const Vec1D<Card> &cards) const;
 
-  const int NUM_PLAYERS;
-  const int NUM_CARDS;
-  const int NUM_LEVELS;
+  const size_t NUM_PLAYERS;
+  const size_t NUM_CARDS;
+  const size_t NUM_LEVELS;
 
   std::mt19937 m_rng;
   Vec1D<Card> m_gameCards;
   Vec3D<double> m_gameValues;
   Vec2D<double> *m_gameValuesPtr;
 
-  Vec3D<DecisionNode> m_dNodes;
+  Vec3D<DNode> m_dNodes;
   Vec3D<double> m_utilities;
   Vec4D<double> m_terminalUtilities;
   Vec2D<int> m_dNodeIndexes;

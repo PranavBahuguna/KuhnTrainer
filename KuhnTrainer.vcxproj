@@ -132,6 +132,7 @@
     <ClCompile Include="Main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="DataTypes.h" />
     <ClInclude Include="DecisionNode.h" />
     <ClInclude Include="Game.h" />
     <ClInclude Include="GraphPlotter.h" />

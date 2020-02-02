@@ -11,9 +11,9 @@
 #include <sstream>
 #include <string>
 
-constexpr int XAXIS_ITERATIONS    = 1;
-constexpr int XAXIS_NODES_REACHED = 2;
-constexpr int XAXIS_CALC_TIMES    = 3;
+constexpr int XAXIS_ITERATIONS    = 0;
+constexpr int XAXIS_NODES_REACHED = 1;
+constexpr int XAXIS_CALC_TIMES    = 2;
 
 int main(int argc, char *argv[]) {
   // Init python interpreter and add modules to sys path

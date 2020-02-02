@@ -9,11 +9,16 @@
 #include <numeric>
 #include <string>
 
+constexpr size_t NUM_ACTIONS = 2;
+
 /* Constructor
  */
 DecisionNode::DecisionNode(const std::string &name)
-    : NAME(name), m_strategy(NUM_ACTIONS), m_strategySum(NUM_ACTIONS),
-      m_regretSum(NUM_ACTIONS), m_avgBetProbPtr(NULL) {}
+    : m_name(name),
+      m_strategy(NUM_ACTIONS), 
+      m_strategySum(NUM_ACTIONS),
+      m_regretSum(NUM_ACTIONS),
+      m_avgBetProbPtr(NULL) {}
 
 /* Initialise the decision node's state and reset all strategies and regrets
  */
@@ -22,7 +27,7 @@ void DecisionNode::init() {
   std::fill(m_strategySum.begin(), m_strategySum.end(), 0.0);
   std::fill(m_regretSum.begin(), m_regretSum.end(), 0.0);
 
-  m_avgBetProbabilitiesList.push_back(std::vector<double>());
+  m_avgBetProbabilitiesList.push_back(Vec1D<double>());
   m_avgBetProbPtr = &m_avgBetProbabilitiesList.back();
 }
 
@@ -31,7 +36,7 @@ void DecisionNode::init() {
  */
 void DecisionNode::calcStrategy(const double weight) {
   // Set strategy equal to all positive regrets
-  std::vector<double> positiveRegrets(NUM_ACTIONS);
+  Vec1D<double> positiveRegrets(NUM_ACTIONS);
   for (size_t i = 0; i < NUM_ACTIONS; ++i)
     positiveRegrets[i] = std::max(m_regretSum[i], 0.0);
 
@@ -49,7 +54,7 @@ void DecisionNode::calcStrategy(const double weight) {
 /* Calculate the average bet probabilities for this node
  */
 void DecisionNode::calcAvgBetProbabilities() {
-  std::vector<double> avgStrategy(NUM_ACTIONS);
+  Vec1D<double> avgStrategy(NUM_ACTIONS);
   double normalizingSum =
       std::accumulate(m_strategySum.begin(), m_strategySum.end(), 0.0);
   for (size_t i = 0; i < NUM_ACTIONS; ++i) {
@@ -65,10 +70,10 @@ void DecisionNode::calcAvgBetProbabilities() {
  * probabilities list
  * @return :: Vector of averaged bet probabilities
  */
-std::vector<double> DecisionNode::getAvgBetProbabilities() const {
+Vec1D<double> DecisionNode::getAvgBetProbabilities() const {
   const size_t numSets = m_avgBetProbabilitiesList.size();
   const size_t numProbabilities = m_avgBetProbabilitiesList.front().size();
-  std::vector<double> avgBetProbabilities(numProbabilities);
+  Vec1D<double> avgBetProbabilities(numProbabilities);
 
   for (size_t i = 0; i < numProbabilities; ++i) {
     double normalizingSum = 0.0;
@@ -84,11 +89,11 @@ std::vector<double> DecisionNode::getAvgBetProbabilities() const {
 /* Obtains the errors for the averaged sets of bet probabilities
  * @return :: Vector of averaged bet probability errors
  */
-std::vector<double> DecisionNode::getAvgBetErrors() const {
+Vec1D<double> DecisionNode::getAvgBetErrors() const {
   const size_t numSets = m_avgBetProbabilitiesList.size();
   const size_t numProbabilities = m_avgBetProbabilitiesList.front().size();
   const auto &avgBetProbabilities = getAvgBetProbabilities();
-  std::vector<double> avgBetErrors(numProbabilities);
+  Vec1D<double> avgBetErrors(numProbabilities);
 
   for (size_t i = 0; i < numProbabilities; ++i) {
     double squareSum = 0.0;
@@ -121,7 +126,7 @@ std::ostream &operator<<(std::ostream &os, const DecisionNode &node) {
   if (avgBetProbabilities.empty())
     return os << "[0.000000, 0.000000]";
 
-  std::vector<std::string> strVec;
+  Vec1D<std::string> strVec;
   std::stringstream ss1, ss2;
   ss1 << std::fixed << std::setprecision(6) << 1.0 - avgBetProbabilities.back();
   ss2 << std::fixed << std::setprecision(6) << avgBetProbabilities.back();
