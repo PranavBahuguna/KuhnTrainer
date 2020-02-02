@@ -1,8 +1,8 @@
+#include "DataTypes.h"
 #include "Game.h"
 #include "GraphPlotter.h"
 
 #include <boost/lexical_cast.hpp>
-#include <Windows.h>
 
 #include <cmath>
 #include <fstream>
@@ -30,7 +30,7 @@ int main(int argc, char *argv[]) {
   
   // Initialise game and train for a number of iterations
   Game game(nPlayers);
-  for (size_t i = 0; i < nTrials; ++i) {
+  for (int i = 0; i < nTrials; ++i) {
     game.init();
     game.train(nIterations);
   }
@@ -43,19 +43,13 @@ int main(int argc, char *argv[]) {
   std::string title = "Average betting probability over time"; // title
   std::string xLabel;                                          // x-axis label
   std::string yLabel = "Avg. betting probability";             // y-axis label
-
-  std::vector<double> xValues(nSamples); // x-values
+  Vec1D<double> xValues(nSamples);                             // x-values
 
   // Fill xValues according to the x-axis units selection
   switch (xAxisUnits) {
     case XAXIS_ITERATIONS: {
-      // [DEVELOPMENT]: Replace this with some kind of generator function
-      double current = 0;
       double step = nIterations / nSamples;
-      for (auto &x : xValues) {
-        x = current;
-        current += step;
-      }
+      std::generate(xValues.begin(), xValues.end(), [i = 0.0, step]() mutable { return i += step; });
       xLabel = "Iterations";
       break;
     }
@@ -93,7 +87,7 @@ int main(int argc, char *argv[]) {
   const auto &avgGameValues = game.getAvgGameValues();              // y-values
   const auto &avgGameValueErrors = game.getAvgGameValueErrors();    // e-values
   const auto &playerNames =
-      std::vector<std::string>{"Player 1", "Player 2", "Player 3"}; // legend
+      Vec1D<std::string>{"Player 1", "Player 2", "Player 3"};       // legend
 
   // Plot graph of average game value for each number of nodes reached for each
   // player
@@ -108,8 +102,8 @@ int main(int argc, char *argv[]) {
   std::vector<double> errorsVec(nSamples);                          // e-values
   std::fill(std::begin(errorsVec), std::end(errorsVec), 0.0);
 
-  // Plot graph of average game value distance from expected for each player
-  gPlot.plot(xValues, gameValueDists, errorsVec, "distances");
+  // Plot graph of average game value distance (e-Nash) from expected for each player
+  gPlot.plot(xValues, gameValueDists, errorsVec, "");
   gPlot.showPlot(title, xLabel, yLabel, "", "log");
 
   Py_Finalize();
