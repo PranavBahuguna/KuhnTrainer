@@ -1,13 +1,13 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.27130.2026
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29728.190
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "KuhnTrainer", "KuhnTrainer.vcxproj", "{5A733675-E776-4E07-A27B-2875C45F0271}"
 EndProject
 Project("{888888A0-9F3D-457C-B088-3A5042F75D52}") = "Python Modules", "PythonModules\Python Modules.pyproj", "{97BACCDE-D094-487C-B098-4C06B349D264}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "UnitTests", "UnitTests\UnitTests.vcxproj", "{9D777C18-48A5-41EF-A36C-3378B6F2997D}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "UnitTests", "UnitTests\UnitTests.vcxproj", "{D9286960-8CEA-4469-9F5C-55256FE5C85E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -35,16 +35,16 @@ Global
 		{97BACCDE-D094-487C-B098-4C06B349D264}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{97BACCDE-D094-487C-B098-4C06B349D264}.Release|x64.ActiveCfg = Release|Any CPU
 		{97BACCDE-D094-487C-B098-4C06B349D264}.Release|x86.ActiveCfg = Release|Any CPU
-		{9D777C18-48A5-41EF-A36C-3378B6F2997D}.Debug|Any CPU.ActiveCfg = Debug|Win32
-		{9D777C18-48A5-41EF-A36C-3378B6F2997D}.Debug|x64.ActiveCfg = Debug|x64
-		{9D777C18-48A5-41EF-A36C-3378B6F2997D}.Debug|x64.Build.0 = Debug|x64
-		{9D777C18-48A5-41EF-A36C-3378B6F2997D}.Debug|x86.ActiveCfg = Debug|Win32
-		{9D777C18-48A5-41EF-A36C-3378B6F2997D}.Debug|x86.Build.0 = Debug|Win32
-		{9D777C18-48A5-41EF-A36C-3378B6F2997D}.Release|Any CPU.ActiveCfg = Release|Win32
-		{9D777C18-48A5-41EF-A36C-3378B6F2997D}.Release|x64.ActiveCfg = Release|x64
-		{9D777C18-48A5-41EF-A36C-3378B6F2997D}.Release|x64.Build.0 = Release|x64
-		{9D777C18-48A5-41EF-A36C-3378B6F2997D}.Release|x86.ActiveCfg = Release|Win32
-		{9D777C18-48A5-41EF-A36C-3378B6F2997D}.Release|x86.Build.0 = Release|Win32
+		{D9286960-8CEA-4469-9F5C-55256FE5C85E}.Debug|Any CPU.ActiveCfg = Debug|Win32
+		{D9286960-8CEA-4469-9F5C-55256FE5C85E}.Debug|x64.ActiveCfg = Debug|x64
+		{D9286960-8CEA-4469-9F5C-55256FE5C85E}.Debug|x64.Build.0 = Debug|x64
+		{D9286960-8CEA-4469-9F5C-55256FE5C85E}.Debug|x86.ActiveCfg = Debug|Win32
+		{D9286960-8CEA-4469-9F5C-55256FE5C85E}.Debug|x86.Build.0 = Debug|Win32
+		{D9286960-8CEA-4469-9F5C-55256FE5C85E}.Release|Any CPU.ActiveCfg = Release|Win32
+		{D9286960-8CEA-4469-9F5C-55256FE5C85E}.Release|x64.ActiveCfg = Release|x64
+		{D9286960-8CEA-4469-9F5C-55256FE5C85E}.Release|x64.Build.0 = Release|x64
+		{D9286960-8CEA-4469-9F5C-55256FE5C85E}.Release|x86.ActiveCfg = Release|Win32
+		{D9286960-8CEA-4469-9F5C-55256FE5C85E}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
